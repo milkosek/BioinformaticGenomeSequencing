@@ -21,13 +21,13 @@ i = 0
 tmp = 0
 tmpstr = ""
 
-while(i < n):
+while i < n:
     tmp = r.randint(0, 3)
-    if(tmp == 0):
+    if tmp == 0:
         DNA = DNA + "A"
-    elif(tmp == 1):
+    elif tmp == 1:
         DNA = DNA + "T"
-    elif(tmp == 2):
+    elif tmp == 2:
         DNA = DNA + "C"
     else:
         DNA = DNA + "G"
@@ -40,8 +40,8 @@ i = 0
 j = 0
 
 while i < math.ceil(n/m):
-    while(j < m):
-        if(len(DNA[i*m+j:i*m+m+j]) == m):
+    while j < m:
+        if len(DNA[i*m+j:i*m+m+j]) == m:
             parts.append(DNA[i*m+j:i*m+m+j])
         j += 1
     j = 0
@@ -79,7 +79,7 @@ while i < o/100*listlen:
     i += 1
 parts.sort()
 print(parts)
-while(i < len(parts)):
+while i < len(parts):
     f.write(parts[i])
     i += 1
     if i < len(parts):

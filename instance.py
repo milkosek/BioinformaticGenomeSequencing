@@ -1,6 +1,6 @@
 from math import ceil, inf
-import numpy as np
 from collections import defaultdict
+import numpy as np
 
 # init constants
 NUCLEOTIDES = np.array(['G', 'T', 'C', 'A'])
