@@ -21,6 +21,7 @@ class AntColony:
         self.iterations = iterations
         self.best_levenshtein = float('inf')
         self.best_solution = ""
+        self.best_route = []
 
         self.oligos_count = len(instance.oligos)
         self.oligo_size = len(instance.oligos[0][0])
@@ -47,7 +48,7 @@ class AntColony:
             current = self.oligos_map[oligo]
             self.oligos_optimal_successors[oligo] = list(
                 filter(
-                    lambda successor: 0 < self.distance_matrix[current][self.oligos_map[successor]] <= 4,
+                    lambda successor: 0 < self.distance_matrix[current][self.oligos_map[successor]] < 4,
                     self.oligos_list
                 )
             )
@@ -81,22 +82,35 @@ class AntColony:
         self._get_optimal_successors()
 
 
-    def _update_pheromone(self, pheromones_matrices: list):
+    # def _update_pheromone(self, pheromones_matrices: list):
+    #     # evaporation
+    #     for i in range(self.oligos_count):
+    #         for j in range(self.oligos_count):
+    #             self.pheromone_matrix[i][j] *= (1 - self.evaporation)
+    #     # pheromone from ants
+    #     for pheromone_matrix in pheromones_matrices:
+    #         for i in range(self.oligos_count):
+    #             for j in range(self.oligos_count):
+    #                 self.pheromone_matrix[i][j] += pheromone_matrix[i][j]
+    #                 if self.pheromone_matrix[i][j] > 100:
+    #                     self.pheromone_matrix[i][j] = 100
+
+    def _update_pheromone(self):
         # evaporation
         for i in range(self.oligos_count):
             for j in range(self.oligos_count):
                 self.pheromone_matrix[i][j] *= (1 - self.evaporation)
-        # pheromone from ants
-        for pheromone_matrix in pheromones_matrices:
-            for i in range(self.oligos_count):
-                for j in range(self.oligos_count):
-                    self.pheromone_matrix[i][j] += pheromone_matrix[i][j]
-                    if self.pheromone_matrix[i][j] > 100:
-                        self.pheromone_matrix[i][j] = 100
+        # pheromone from current best solution
+        for i in range(len(self.best_route) - 1):
+            idx1 = self.oligos_map[self.oligos_list[i]]
+            idx2 = self.oligos_map[self.oligos_list[i + 1]]
+            self.pheromone_matrix[idx1][idx2] += (20 / self.best_levenshtein)
+            
 
 
-    def _update_best_solution(self, new_dna, new_levenshtein):
+    def _update_best_solution(self, new_route, new_dna, new_levenshtein):
         if new_levenshtein < self.best_levenshtein:
+            self.best_route = new_route
             self.best_solution = new_dna
             self.best_levenshtein = new_levenshtein
 
@@ -113,10 +127,10 @@ class AntColony:
 
     def _ant_run(self):
         # initialize local pheromone accumulator
-        ant_pheromone_matrix = [
-            [float(0) for _ in range(self.oligos_count)]
-            for _ in range(self.oligos_count)
-        ]
+        # ant_pheromone_matrix = [
+        #     [float(0) for _ in range(self.oligos_count)]
+        #     for _ in range(self.oligos_count)
+        # ]
         # local counter of nodes used in solution
         nodes_use_count = defaultdict(int)
         for oligo in self.oligos_list:
@@ -147,7 +161,14 @@ class AntColony:
                 self._ant_get_weight(current_node, successor)
                 for successor in successors
             ]
-            # print(f"weights: {weights}")
+            # max_w = 0
+            # min_w = float('inf')
+            # for value in weights:
+            #         if value > max_w:
+            #             max_w = value
+            #         if value < min_w:
+            #             min_w = value
+            # print(f"weights: [{min_w}, {max_w}]")
             # get successor
             [next_node] = np.random.choice(successors, 1, weights)
             # update local solution
@@ -165,47 +186,60 @@ class AntColony:
         # distribute pheromone based on route
         generated_dna = assembleDNA(list(route), self.oligo_size)
         route_rank = levenshteinDistance(self.instance.original_sequence, generated_dna)
-        self._update_best_solution(generated_dna, route_rank)
+        self._update_best_solution(route, generated_dna, route_rank)
         # print(route_rank)
         # skip next calculations if best solution was found
         if route_rank == 0:
-            return route, generated_dna, ant_pheromone_matrix, True
-        for i in range(len(route) - 1):
-            idx1 = self.oligos_map[route[i]]
-            idx2 = self.oligos_map[route[i + 1]]
-            ant_pheromone_matrix[idx1][idx2] += (1.0 / route_rank)
+            return route, generated_dna, True
+            # return route, generated_dna, ant_pheromone_matrix, True
+        # for i in range(len(route) - 1):
+        #     idx1 = self.oligos_map[route[i]]
+        #     idx2 = self.oligos_map[route[i + 1]]
+        #     ant_pheromone_matrix[idx1][idx2] += (1.0 / route_rank)
 
         # print(ant_pheromone_matrix)
-        return route, generated_dna, ant_pheromone_matrix, False
+        # return route, generated_dna, ant_pheromone_matrix, False
+        return route, generated_dna, False
 
 
     def run(self):
         for iteration in range(self.iterations):
             stop = False
             print(f"Starting iteration #{iteration}")
-            pheromones_matrices = []
-            for ant in range(self.ants_count):
+            # pheromones_matrices = []
+            for _ in range(self.ants_count):
                 # print(f"Ant #{ant} generates solution")
-                ant_route, ant_dna, ant_pheromone_matrix, found_best = self._ant_run()
+                ant_route, ant_dna, found_best = self._ant_run()
+                # ant_route, ant_dna, ant_pheromone_matrix, found_best = self._ant_run()
                 if found_best:
                     stop = True
                     break
-
-                pheromones_matrices.append(ant_pheromone_matrix)
+                # pheromones_matrices.append(ant_pheromone_matrix)
 
             if stop:
                 break
-            self._update_pheromone(pheromones_matrices)
+            self._update_pheromone()
+            print(self.best_levenshtein)
+            # max_pheromone = 0
+            # min_pheromone = float('inf')
+            # for row in self.pheromone_matrix:
+            #     for value in row:
+            #         if value > max_pheromone:
+            #             max_pheromone = value
+            #         if value < min_pheromone:
+            #             min_pheromone = value
+            # print(f"min: {min_pheromone} max: {max_pheromone}")
+            # self._update_pheromone(pheromones_matrices)
         return self.best_solution
 
 
 
 if __name__ == "__main__":
     instance = load_instance("data.txt")
-    alpha = 1
-    beta = 2
-    ants_count = 10
-    evaporation = 0.5
+    alpha = 2
+    beta = 3
+    ants_count = 20
+    evaporation = 0.1
     iterations = 50
     ac_instance = AntColony(
         instance,
@@ -219,7 +253,7 @@ if __name__ == "__main__":
     #     print(oligo)
     #     print(ac_instance.oligos_optimal_successors[oligo])
     instance_solution = ac_instance.run()
-    print(f"Original sequence:\n{instance.original_sequence}")
-    print(f"Generated sequence:\n{instance_solution}")
+    print(f"Original sequence:\n{instance.original_sequence} {len(instance.original_sequence)}")
+    print(f"Generated sequence:\n{instance_solution} {len(instance_solution)}")
     print(f"Levenshtein distance: {levenshteinDistance(instance.original_sequence, instance_solution)}")
     

@@ -12,7 +12,7 @@ class Instance:
 def load_instance(file_path):
     with open(file_path, encoding='utf-8') as f:
         oligos = []
-        dna_sequence = f.readline()
+        dna_sequence = f.readline().strip()
         for line in f:
             split_line = line.split()
             oligos.append(
@@ -53,70 +53,75 @@ def assembleDNA(solution: list, oligo_size: int):
     return result
 
 
-# def levenshteinDistance(string1 : str, string2 : str):
-#     """
-#     Implementation of http://web.archive.org/web/20120526085419/http://www.merriampark.com/ldjava.htm
-#     """
+def levenshteinDistance(string1 : str, string2 : str):
+    """
+    Implementation of http://web.archive.org/web/20120526085419/http://www.merriampark.com/ldjava.htm
+    """
 
-#     n = len(string1)
-#     m = len(string2)
+    n = len(string1)
+    m = len(string2)
 
-#     if  m == 0:
-#         return n
-#     elif n == 0:
-#         return m
+    if  m == 0:
+        return n
+    elif n == 0:
+        return m
 
-#     prevCost = []
-#     cost = []
+    prevCost = []
+    cost = []
 
-#     for i in range(n+1):
-#         prevCost.append(i)
-#         cost.append(0)
+    for i in range(n+1):
+        prevCost.append(i)
+        cost.append(0)
 
-#     for j in range(1, m + 1):
-#         string2_char = string2[j - 1]
-#         cost[0] = j
-#         for i in range(1, n+1):
-#             value = 0 if string1[i-1] == string2_char else 1
-#             cost[i] = min(cost[i - 1] + 1, prevCost[i] + 1, prevCost[i - 1] + value)
-#         prevCost, cost = cost, prevCost
+    for j in range(1, m + 1):
+        string2_char = string2[j - 1]
+        cost[0] = j
+        for i in range(1, n+1):
+            value = 0 if string1[i-1] == string2_char else 1
+            cost[i] = min(cost[i - 1] + 1, prevCost[i] + 1, prevCost[i - 1] + value)
+        prevCost, cost = cost, prevCost
 
-#     return prevCost[n]
+    return prevCost[n]
 
-def levenshteinDistance(token1, token2):
-    distances = np.zeros((len(token1) + 1, len(token2) + 1))
+# def levenshteinDistance(token1, token2):
+#     distances = np.zeros((len(token1) + 1, len(token2) + 1))
 
-    for t1 in range(len(token1) + 1):
-        distances[t1][0] = t1
+#     for t1 in range(len(token1) + 1):
+#         distances[t1][0] = t1
 
-    for t2 in range(len(token2) + 1):
-        distances[0][t2] = t2
+#     for t2 in range(len(token2) + 1):
+#         distances[0][t2] = t2
         
-    a = 0
-    b = 0
-    c = 0
+#     a = 0
+#     b = 0
+#     c = 0
     
-    for t1 in range(1, len(token1) + 1):
-        for t2 in range(1, len(token2) + 1):
-            if (token1[t1-1] == token2[t2-1]):
-                distances[t1][t2] = distances[t1 - 1][t2 - 1]
-            else:
-                a = distances[t1][t2 - 1]
-                b = distances[t1 - 1][t2]
-                c = distances[t1 - 1][t2 - 1]
+#     for t1 in range(1, len(token1) + 1):
+#         for t2 in range(1, len(token2) + 1):
+#             if (token1[t1-1] == token2[t2-1]):
+#                 distances[t1][t2] = distances[t1 - 1][t2 - 1]
+#             else:
+#                 a = distances[t1][t2 - 1]
+#                 b = distances[t1 - 1][t2]
+#                 c = distances[t1 - 1][t2 - 1]
                 
-                if (a <= b and a <= c):
-                    distances[t1][t2] = a + 1
-                elif (b <= a and b <= c):
-                    distances[t1][t2] = b + 1
-                else:
-                    distances[t1][t2] = c + 1
+#                 if (a <= b and a <= c):
+#                     distances[t1][t2] = a + 1
+#                 elif (b <= a and b <= c):
+#                     distances[t1][t2] = b + 1
+#                 else:
+#                     distances[t1][t2] = c + 1
 
-    return distances[len(token1)][len(token2)]
+#     return distances[len(token1)][len(token2)]
 
 
 if __name__ == "__main__":
-    print(levenshteinDistance('ATGTACTATC', 'ATGTACTATC'))
+    print(
+        levenshteinDistance(
+            "GTTGCAAATATTCTTGTCGGGGAACGCTCTTTAGCGTCTCTCCATGTAGGAGGAGAGCACACACCCTCCTAAGGCATGTCTTACTCCCATATATGTACAC",
+            'GTTGCAAATATTCTTGTCGGGGAACGCTCTTTAGCGTCTCTCCATGTAGGAGGAGAGCACACACCCTCCTAAGGCATGTCTTACTCCCATATATGTACAC'
+        )
+    )
     # print(calculateDistance('ATGT', 'ATGT'))
     # print(calculateDistance('ATGT', 'TGTA'))
     # print(calculateDistance('ATGT', 'GTAT'))
