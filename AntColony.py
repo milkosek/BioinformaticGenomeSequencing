@@ -1,4 +1,6 @@
 from collections import defaultdict
+from math import ceil
+from statistics import mean
 import numpy as np
 from utils import Instance, assembleDNA, calculateDistance, levenshteinDistance, load_instance
 
@@ -219,7 +221,7 @@ class AntColony:
             if stop:
                 break
             self._update_pheromone()
-            print(self.best_levenshtein)
+            # print(self.best_levenshtein)
             # max_pheromone = 0
             # min_pheromone = float('inf')
             # for row in self.pheromone_matrix:
@@ -236,24 +238,26 @@ class AntColony:
 
 if __name__ == "__main__":
     instance = load_instance("data.txt")
-    alpha = 2
+    alpha = 1
     beta = 3
-    ants_count = 20
-    evaporation = 0.1
-    iterations = 50
-    ac_instance = AntColony(
-        instance,
-        ants_count=ants_count,
-        alpha=alpha,
-        beta=beta,
-        evaporation=evaporation,
-        iterations=iterations
-    )
-    # for oligo in ac_instance.oligos_optimal_successors:
-    #     print(oligo)
-    #     print(ac_instance.oligos_optimal_successors[oligo])
-    instance_solution = ac_instance.run()
-    print(f"Original sequence:\n{instance.original_sequence} {len(instance.original_sequence)}")
-    print(f"Generated sequence:\n{instance_solution} {len(instance_solution)}")
-    print(f"Levenshtein distance: {levenshteinDistance(instance.original_sequence, instance_solution)}")
+    ants_count = 10
+    evaporation = 0.3
+    iterations = 40
+
+    results = []
+    for i in range(10):
+        print(f"Test #{i + 1}")
+        ac_instance = AntColony(
+            instance,
+            ants_count=ants_count,
+            alpha=alpha,
+            beta=beta,
+            evaporation=evaporation,
+            iterations=iterations
+        )
+        instance_solution = ac_instance.run()
+        results.append(ac_instance.best_levenshtein)
     
+    avg = ceil(mean(results))
+    print(results)
+    print(f"Average: {avg}")
